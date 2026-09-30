@@ -1,0 +1,228 @@
+{
+  "title": "Traffic Pipeline — Phase 1",
+  "uid": "traffic-phase1",
+  "tags": [
+    "traffic"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "DS",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "grafana-postgresql-datasource"
+      },
+      {
+        "name": "device",
+        "label": "Device",
+        "type": "textbox",
+        "query": "dev-00001",
+        "current": {
+          "text": "dev-00001",
+          "value": "dev-00001"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Vehicles per 1 minute — $device",
+      "description": "15 s devices: 4 readings summed per minute. 60 s devices: 1 reading per minute. Served by the primary key index.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_bin('1 minute', interval_start, '2000-01-01 00:00:00+00') AS time,\n       sum(vehicles) AS vehicles\nFROM raw_readings\nWHERE device_id = ${device:sqlstring}\n  AND $__timeFilter(interval_start)\nGROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Vehicles per 15 minutes — $device",
+      "description": "Same device, 15-minute buckets, computed on the fly from raw readings.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_bin('15 minutes', interval_start, '2000-01-01 00:00:00+00') AS time,\n       sum(vehicles) AS vehicles\nFROM raw_readings\nWHERE device_id = ${device:sqlstring}\n  AND $__timeFilter(interval_start)\nGROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "City-wide vehicles per minute",
+      "description": "Sums every device. No index leads with interval_start, so this scans the table: watch it slow down as data grows (intentional in Phase 1). The last minute or so is partial because devices send with jitter.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_bin('1 minute', interval_start, '2000-01-01 00:00:00+00') AS time,\n       sum(vehicles) AS vehicles\nFROM raw_readings\nWHERE $__timeFilter(interval_start)\nGROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Ingest rate (rows per minute, by received_at)",
+      "description": "Rows the API stored per minute. Compare with the simulator's 'expected ingest' line. Full scan: received_at has no index.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS}"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_bin('1 minute', received_at, '2000-01-01 00:00:00+00') AS time,\n       count(*) AS rows\nFROM raw_readings\nWHERE $__timeFilter(received_at)\nGROUP BY 1 ORDER BY 1"
+        }
+      ]
+    }
+  ]
+}
