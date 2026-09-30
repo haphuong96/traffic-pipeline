@@ -57,9 +57,10 @@ async function warnOnConflictingDuplicates(
   log: WarnLogger,
 ): Promise<void> {
   const insertedKeys = new Set(insertedRows.map((r) => key(r.device_id, r.interval_start)));
-  // Note: if the same reading appears twice in one batch, the first copy is
-  // inserted and the second is "not returned", so it lands here too. That
-  // is fine: it is compared against the stored value like any other.
+  // Limitation: if the same (device, intervalStart) appears twice in ONE
+  // batch, its key is in insertedKeys, so neither copy is checked here. The
+  // second copy is still counted as a duplicate and the first value is kept,
+  // but a conflicting count within a single batch is not logged.
   const dupes = readings.filter((r) => !insertedKeys.has(key(r.deviceId, r.intervalStart)));
 
   // Fetch the stored values for all duplicates in one query. unnest() turns

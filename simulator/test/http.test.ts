@@ -11,6 +11,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/ok') return res.end(JSON.stringify({ accepted: 2, duplicates: 1 }));
     if (req.url === '/bad') return res.writeHead(400).end('{"reason":"nope"}');
     if (req.url === '/boom') return res.writeHead(500).end();
+    if (req.url === '/missing') return res.writeHead(404).end();
     // '/hang': never answer
   });
 });
@@ -38,4 +39,9 @@ test('classifies a slow server as a timeout', async () => {
 test('classifies a refused connection as a network error', async () => {
   const r = await createSender('http://127.0.0.1:1/readings', 1000, 2)(batch);
   assert.deepEqual([r.kind, r.kind === 'retry' && r.reason], ['retry', 'network']);
+});
+
+test('only a 400 is permanent: other 4xx (e.g. a wrong API_URL → 404) are retried', async () => {
+  const r = await createSender(`${base}/missing`, 1000, 2)(batch);
+  assert.equal(r.kind, 'retry');
 });

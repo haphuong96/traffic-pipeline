@@ -5,7 +5,8 @@ import { loadDevices } from './devices.ts';
 import { insertReadings } from './store.ts';
 
 // One pool for the whole process. Its size caps how many INSERTs run in
-// Postgres at the same time; extra requests wait in the pool's queue.
+// Postgres at the same time; extra requests wait in the pool's queue, with
+// no time limit (pg's default connectionTimeoutMillis is 0).
 const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.poolSize });
 // Without this handler an idle client losing its connection (e.g. Postgres
 // restarts) would emit an unhandled 'error' event and crash the process.

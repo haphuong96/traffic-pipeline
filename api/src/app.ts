@@ -33,8 +33,11 @@ export function buildApp(deps: AppDeps) {
       return reply.code(400).send(result.error);
     }
 
-    // If this throws (database down, pool exhausted, ...) Fastify's default
-    // error handler answers 500, which tells the device to retry later.
+    // If this throws (e.g. database down) Fastify's default error handler
+    // answers 500, which tells the device to retry later. Note: when all pool
+    // connections are busy, requests do NOT fail; they wait in the pool's
+    // queue with no time limit. Under overload that shows up as rising
+    // latency and client timeouts, not as 500s.
     // Duplicates are NOT errors: they mean "already stored", so 200.
     return deps.store(result.readings);
   });

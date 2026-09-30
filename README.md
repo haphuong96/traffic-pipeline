@@ -31,7 +31,7 @@ npm run seed
 # 4. Start the API on :8080 (leave it running)
 npm start
 
-# 5. In another terminal: start the simulator (1,000 devices by default)
+# 5. In another terminal, from the repo root: start the simulator (1,000 devices by default)
 cd simulator
 npm start
 ```
@@ -48,7 +48,7 @@ sent=660 (66/s) reqs=660 200=660 400=0 5xx=0 timeouts=0 neterr=0 accepted=660 du
 
 The dashboard is committed as `grafana/dashboard.json`. Import it in either of these ways:
 
-- **UI:** Grafana (http://localhost:4000) → Dashboards → New → Import → upload `grafana/dashboard.json`, then pick the PostgreSQL data source.
+- **UI:** Grafana (http://localhost:4000) → Dashboards → New → Import → upload `grafana/dashboard.json`, then choose the PostgreSQL data source in the dashboard's **Data source** dropdown.
 - **Script:** `GRAFANA_USER=admin GRAFANA_PASSWORD=... ./grafana/import.sh`
 
 It has four panels: vehicles per 1 minute and per 15 minutes for the device in the **Device** box, city-wide vehicles per minute, and the ingest rate. All aggregation is computed on the fly from `raw_readings`. That is intentional in Phase 1.

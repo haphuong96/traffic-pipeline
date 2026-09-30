@@ -60,18 +60,26 @@ export class SimDevice {
   }
 
   start(): void {
-    this.scheduleNextInterval();
+    this.scheduleInterval(nextBoundary(this.deps.clock.now(), this.cfg.intervalSeconds));
   }
 
-  private scheduleNextInterval(): void {
+  /**
+   * Waits for `boundary` (the end of an interval) plus jitter.
+   *
+   * The next boundary is always derived from the previous one, never
+   * recomputed from "now". Timers fire late under load (event-loop lag); if
+   * we recomputed from the clock, a late timer near the end of its jitter
+   * window would land past the next boundary and that interval would be
+   * silently skipped.
+   */
+  private scheduleInterval(boundary: number): void {
     const { clock, random } = this.deps;
-    const intervalMs = this.cfg.intervalSeconds * 1000;
-    const boundary = nextBoundary(clock.now(), this.cfg.intervalSeconds);
     // Send jitter: 0 to one full interval after the boundary, so 20,000
     // devices don't all hit the API in the same millisecond. The reading's
     // intervalStart is still the aligned boundary, whenever we send it.
-    const jitter = random() * intervalMs;
-    clock.setTimeout(() => this.onIntervalEnd(boundary), boundary - clock.now() + jitter);
+    const jitter = random() * this.cfg.intervalSeconds * 1000;
+    // max(0, …): if we're already behind schedule, fire now and catch up.
+    clock.setTimeout(() => this.onIntervalEnd(boundary), Math.max(0, boundary - clock.now() + jitter));
   }
 
   private onIntervalEnd(boundary: number): void {
@@ -82,7 +90,7 @@ export class SimDevice {
       intervalSeconds: this.cfg.intervalSeconds,
       vehicles: vehicleCount(this.cfg.baseRatePerMinute, new Date(intervalStart), this.cfg.intervalSeconds, this.deps.random),
     });
-    this.scheduleNextInterval();
+    this.scheduleInterval(boundary + this.cfg.intervalSeconds * 1000);
     if (!this.inFlight && !this.retryPending) void this.flush();
   }
 
@@ -95,7 +103,12 @@ export class SimDevice {
 
     const outcome = await this.deps.send(batch);
     this.inFlight = false;
-    if (outcome.latencyMs !== undefined) metrics.latenciesMs.push(outcome.latencyMs);
+    // Latency percentiles describe how fast the API answers, so they only
+    // include requests that got an HTTP response. Timeouts (≈ the timeout
+    // value) and refused connections (≈ 1 ms) are counted separately instead
+    // of distorting p50/p99.
+    const gotResponse = outcome.kind !== 'retry' || outcome.reason === '5xx';
+    if (gotResponse && outcome.latencyMs !== undefined) metrics.latenciesMs.push(outcome.latencyMs);
 
     if (outcome.kind === 'retry') {
       if (outcome.reason === 'timeout') metrics.timeouts++;

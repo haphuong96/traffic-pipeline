@@ -11,7 +11,7 @@ export interface ReadingPayload {
 export type SendResult =
   | { kind: 'ok'; accepted: number; duplicates: number; latencyMs: number }
   | { kind: 'rejected'; reason: string; latencyMs: number } // 400: never retry
-  | { kind: 'retry'; reason: '5xx' | 'timeout' | 'network'; latencyMs: number };
+  | { kind: 'retry'; reason: '5xx' | 'timeout' | 'network'; latencyMs: number }; // '5xx' = any non-200/400 response
 
 export function createSender(apiUrl: string, timeoutMs: number, maxConnections: number) {
   // One shared agent for all simulated devices. Keep-alive reuses TCP
@@ -38,7 +38,10 @@ export function createSender(apiUrl: string, timeoutMs: number, maxConnections: 
         const body = JSON.parse(text) as { accepted: number; duplicates: number };
         return { kind: 'ok', accepted: body.accepted, duplicates: body.duplicates, latencyMs };
       }
-      if (res.statusCode >= 400 && res.statusCode < 500) {
+      // Only 400 means "this data is invalid, never resend it". Anything else
+      // (404 from a wrong API_URL, 429, 5xx, ...) is a problem on the server
+      // side, so keep the data and retry rather than silently lose it.
+      if (res.statusCode === 400) {
         return { kind: 'rejected', reason: `${res.statusCode} ${text}`, latencyMs };
       }
       return { kind: 'retry', reason: '5xx', latencyMs };

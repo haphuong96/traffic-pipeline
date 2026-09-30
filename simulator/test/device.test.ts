@@ -8,6 +8,8 @@ import { Metrics } from '../src/metrics.ts';
 class FakeClock implements Clock {
   t: number;
   timers: { at: number; fn: () => void }[] = [];
+  /** Simulates event-loop lag: every timer fires this many ms late. */
+  lateByMs = 0;
   constructor(iso: string) {
     this.t = Date.parse(iso);
   }
@@ -15,7 +17,7 @@ class FakeClock implements Clock {
     return this.t;
   }
   setTimeout(fn: () => void, ms: number) {
-    this.timers.push({ at: this.t + ms, fn });
+    this.timers.push({ at: this.t + ms + this.lateByMs, fn });
   }
   /** Move time forward, firing due timers in order and letting promises settle. */
   async advance(ms: number) {
@@ -37,11 +39,11 @@ const flushPromises = async () => {
   for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
 };
 
-function makeDevice(clock: FakeClock, send: (b: ReadingPayload[]) => Promise<SendOutcome>, intervalSeconds = 15) {
+function makeDevice(clock: FakeClock, send: (b: ReadingPayload[]) => Promise<SendOutcome>, random = () => 0.5) {
   const metrics = new Metrics();
   const device = new SimDevice(
-    { deviceId: 'dev-00001', intervalSeconds, baseRatePerMinute: 20 },
-    { clock, send, metrics, random: () => 0.5, log: () => {} },
+    { deviceId: 'dev-00001', intervalSeconds: 15, baseRatePerMinute: 20 },
+    { clock, send, metrics, random, log: () => {} },
   );
   return { device, metrics };
 }
@@ -122,4 +124,35 @@ test('never sends more than 500 readings per request', async () => {
   await clock.advance(120_000);
   assert.equal(device.bufferedCount, 0);
   assert.ok(Math.max(...sizes) <= 500, `max batch ${Math.max(...sizes)}`);
+});
+
+test('late timers never skip an interval (event-loop lag + near-maximal jitter)', async () => {
+  const clock = new FakeClock('2026-09-30T11:00:50Z');
+  clock.lateByMs = 5;
+  const starts: string[] = [];
+  const { device } = makeDevice(clock, async (batch) => {
+    starts.push(...batch.map((r) => r.intervalStart));
+    return { kind: 'ok' };
+  }, () => 0.9999);
+  device.start();
+  await clock.advance(10 * 60_000);
+  // 11:00:45 … consecutive, every 15 s, nothing missing, nothing repeated.
+  assert.ok(starts.length >= 38, `only ${starts.length} readings in 10 minutes`);
+  starts.forEach((s, i) => assert.equal(s, new Date(Date.parse('2026-09-30T11:00:45Z') + i * 15_000).toISOString().replace('.000Z', 'Z')));
+});
+
+test('latency percentiles only include requests that got an HTTP response', async () => {
+  const clock = new FakeClock('2026-09-30T11:00:50Z');
+  const outcomes: SendOutcome[] = [
+    { kind: 'retry', reason: 'timeout', latencyMs: 5000 },
+    { kind: 'retry', reason: 'network', latencyMs: 1 },
+    { kind: 'retry', reason: '5xx', latencyMs: 40 },
+    { kind: 'ok', latencyMs: 7 },
+  ];
+  const { metrics, device } = makeDevice(clock, async () => outcomes.shift() ?? { kind: 'ok', latencyMs: 7 });
+  device.start();
+  await clock.advance(25_000); // send at 11:01:07.5, retries at +0.5 s, +1 s, +2 s → ok at 11:01:11
+  assert.deepEqual(metrics.latenciesMs, [40, 7]);
+  assert.equal(metrics.timeouts, 1);
+  assert.equal(metrics.networkErrors, 1);
 });

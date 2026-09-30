@@ -36,6 +36,8 @@ _Which step, and which signal moved first: latency, timeouts, buffered readings,
 
 ## Why (evidence)
 
+_Hint: the API's pg pool (`PG_POOL_SIZE`) queues requests with no time limit, so API-side overload tends to show up as rising latency and client timeouts, not as 500s. Timed-out batches are often still inserted later, so the retries show up as `dupes`._
+
 _E.g. API CPU pegged at 100% of one core? Pool waits (latency grows but Postgres CPU stays low)? Postgres CPU or disk I/O? The city-wide query scanning the whole table? Include `docker stats`, `top`, `pg_stat_activity`, and `EXPLAIN ANALYZE` output._
 
 ## Notes for Phase 2
