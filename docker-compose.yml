@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: traffic
     ports:
       - "5434:5432"
+    mem_limit: 1g
     volumes:
       - pgdata:/var/lib/postgresql/data
 

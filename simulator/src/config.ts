@@ -7,6 +7,13 @@ function intEnv(name: string, fallback: number): number {
   return n;
 }
 
+function boolEnv(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  if (raw === 'true' || raw === 'false') return raw === 'true';
+  throw new Error(`${name} must be "true" or "false", got "${raw}"`);
+}
+
 export const config = {
   deviceCount: intEnv('DEVICE_COUNT', 1000),
   // Skip this many devices. dev-00001…dev-20000 are 15 s devices and the
@@ -17,6 +24,13 @@ export const config = {
   requestTimeoutMs: intEnv('REQUEST_TIMEOUT_MS', 5000),
   maxConnections: intEnv('MAX_CONNECTIONS', 128),
   metricsIntervalMs: intEnv('METRICS_INTERVAL_MS', 10_000),
+  // false: every device sends exactly on its interval boundary, so all 15 s
+  // devices hit the API together at :00/:15/:30/:45. For the spike test only.
+  sendJitter: boolEnv('SEND_JITTER', true),
+  // The latest metrics window is also written here as JSON, for monitor/ to
+  // read. Relative paths resolve against the simulator/ directory; set it to
+  // an empty string to disable.
+  metricsFile: process.env.METRICS_FILE ?? 'metrics-latest.json',
 };
 
 /** Must match the API's seed: the first 20,000 devices report every 15 s. */

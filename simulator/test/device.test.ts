@@ -67,6 +67,31 @@ test('sends one aligned reading per interval, after a jittered delay', async () 
   assert.equal(device.bufferedCount, 0);
 });
 
+test('with send jitter off, sends exactly on each boundary', async () => {
+  const clock = new FakeClock('2026-09-30T11:00:50Z');
+  const sent: number[] = [];
+  const device = new SimDevice(
+    { deviceId: 'dev-00001', intervalSeconds: 15, baseRatePerMinute: 20, sendJitter: false },
+    {
+      clock,
+      send: async () => {
+        sent.push(clock.now());
+        return { kind: 'ok' };
+      },
+      metrics: new Metrics(),
+      random: () => 0.99, // would be a ~15 s delay with jitter on
+      log: () => {},
+    },
+  );
+  device.start();
+
+  await clock.advance(40_000); // until 11:01:30
+  assert.deepEqual(
+    sent.map((t) => new Date(t).toISOString()),
+    ['2026-09-30T11:01:00.000Z', '2026-09-30T11:01:15.000Z', '2026-09-30T11:01:30.000Z'],
+  );
+});
+
 test('buffers on retryable failures and resends everything in one batch once the API is back', async () => {
   const clock = new FakeClock('2026-09-30T11:00:50Z');
   let apiUp = false;

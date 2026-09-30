@@ -1,0 +1,167 @@
+﻿time_utc,api_cpu_pct,pg_cpu,pg_mem,pg_waits
+15:10:41,0,0.03%,86.18MiB / 1GiB,ClientRead:2
+15:10:43,0,0.04%,86.82MiB / 1GiB,ClientRead:2
+15:10:45,29,22.99%,104.8MiB / 1GiB,ClientRead:11 idle:1
+15:10:47,34,28.19%,104.8MiB / 1GiB,ClientRead:11 WALSync:1
+15:10:49,36,29.33%,105MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:10:51,35,35.47%,105MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:10:53,28,33.53%,104.8MiB / 1GiB,ClientRead:11 active:1
+15:10:55,27,31.54%,104.3MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:1 idle:2
+15:10:57,33,40.78%,104.6MiB / 1GiB,ClientRead:12
+15:10:59,36,39.01%,104.9MiB / 1GiB,ClientRead:10 idle:2
+15:11:01,43,29.98%,105.6MiB / 1GiB,ClientRead:12
+15:11:03,44,33.94%,105.6MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:11:05,32,32.85%,105MiB / 1GiB,ClientRead:1 ClientRead:8 active:2 idle:1
+15:11:07,29,36.19%,105.4MiB / 1GiB,ClientRead:10 active:1 idle:1
+15:11:09,35,33.56%,105.6MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:11:11,30,33.43%,106MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:13,35,33.81%,105.5MiB / 1GiB,ClientRead:12
+15:11:15,34,31.54%,105.2MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:11:17,36,32.80%,105.5MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:11:19,37,31.92%,105.3MiB / 1GiB,ClientRead:12
+15:11:21,32,33.69%,105.6MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:11:23,38,35.49%,105.5MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:25,34,25.90%,105.6MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:27,44,35.65%,105.9MiB / 1GiB,ClientRead:10 idle:2
+15:11:30,32,30.34%,105.8MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:11:32,33,35.21%,105.9MiB / 1GiB,ClientRead:12
+15:11:34,30,32.88%,105.9MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:36,29,28.26%,105.9MiB / 1GiB,ClientRead:12
+15:11:38,30,31.02%,105.6MiB / 1GiB,ClientRead:12
+15:11:40,31,37.05%,105.2MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:42,37,31.76%,105.8MiB / 1GiB,ClientRead:12
+15:11:44,22,28.75%,105.8MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:5 active:1
+15:11:46,41,31.30%,105.9MiB / 1GiB,ClientRead:12
+15:11:48,30,31.27%,106.1MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:11:50,36,28.83%,105.8MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:11:52,33,28.75%,105.7MiB / 1GiB,ClientRead:11 WALSync:1
+15:11:54,32,26.45%,105.7MiB / 1GiB,ClientRead:12
+15:11:56,39,29.70%,105.5MiB / 1GiB,ClientRead:12
+15:11:58,32,30.83%,105.7MiB / 1GiB,ClientRead:12
+15:12:00,30,29.02%,106.3MiB / 1GiB,ClientRead:12
+15:12:02,26,25.83%,106.7MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1 active:1
+15:12:04,36,34.84%,106.2MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:12:06,36,28.92%,106.3MiB / 1GiB,ClientRead:12
+15:12:08,35,28.05%,106.3MiB / 1GiB,ClientRead:12
+15:12:10,31,30.55%,106.4MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:12:12,40,31.49%,106.2MiB / 1GiB,ClientRead:12
+15:12:14,33,36.52%,106MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:16,35,27.65%,106.3MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:18,32,30.44%,106.2MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:20,35,27.90%,105.9MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:22,28,28.20%,106.4MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:24,30,29.35%,106.5MiB / 1GiB,ClientRead:11 WALSync:1
+15:12:26,23,31.36%,106.1MiB / 1GiB,ClientRead:9 WALSync:1 active:2
+15:12:28,32,29.35%,106.3MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:12:30,35,29.45%,106.2MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:12:32,28,24.71%,106.5MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:12:34,32,22.76%,106MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:2 idle:1
+15:12:36,30,24.69%,106.6MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:12:38,30,24.55%,106.5MiB / 1GiB,ClientRead:11 WALSync:1
+15:12:40,26,28.67%,106.2MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:12:42,28,26.02%,106.3MiB / 1GiB,ClientRead:11 WALSync:1
+15:12:44,37,28.15%,106.4MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:12:46,32,28.32%,106.9MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:12:48,26,25.20%,106.4MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:12:50,26,26.94%,106.2MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:3 idle:1
+15:12:52,21,29.21%,106.4MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:12:54,26,26.19%,106.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:12:56,26,29.56%,106.6MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:12:58,25,26.49%,106.2MiB / 1GiB,ClientRead:11 WALSync:1
+15:13:00,30,25.98%,106.8MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:1 idle:1
+15:13:02,37,25.72%,106.2MiB / 1GiB,ClientRead:2 WALSync:1 WALWrite:9 active:1
+15:13:04,28,25.23%,106.6MiB / 1GiB,ClientRead:12
+15:13:06,30,32.44%,106.2MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:13:08,36,25.17%,106MiB / 1GiB,ClientRead:11 WALSync:1
+15:13:10,22,24.70%,106MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:13:12,30,27.33%,106.4MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:13:14,26,24.37%,106.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:13:16,28,27.06%,106.6MiB / 1GiB,ClientRead:12
+15:13:18,34,25.56%,106.4MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:13:20,21,25.09%,106.4MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:13:22,34,28.82%,106.8MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:13:24,31,24.10%,106.8MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:5 active:1
+15:13:26,27,27.61%,106.1MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:4 active:1
+15:13:28,30,24.88%,106.6MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:3 idle:1
+15:13:30,27,26.83%,106.6MiB / 1GiB,ClientRead:11 WALSync:1
+15:13:32,30,29.80%,106.9MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:13:34,32,24.81%,106.4MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:13:36,26,24.79%,106.4MiB / 1GiB,ClientRead:11 active:1
+15:13:38,22,26.25%,106.7MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:13:40,25,23.56%,106.8MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:13:42,22,30.18%,106.8MiB / 1GiB,ClientRead:11 WALSync:1
+15:13:44,29,25.83%,106.5MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:13:46,25,25.08%,106.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:2 active:2
+15:13:48,23,26.82%,106.3MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:13:50,27,26.74%,106MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:13:52,27,24.95%,107.1MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:13:54,41,29.51%,106.8MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:13:56,27,25.60%,106.6MiB / 1GiB,ClientRead:2 WALSync:1 WALWrite:9
+15:13:58,31,26.83%,106.7MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:14:00,26,25.31%,106.6MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:02,27,28.56%,106.6MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:14:04,29,28.14%,106.5MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:14:06,27,25.97%,107.2MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:08,29,28.33%,106.6MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:10,26,25.08%,106.9MiB / 1GiB,ClientRead:12
+15:14:12,33,28.26%,107.3MiB / 1GiB,ClientRead:2 WALSync:1 WALWrite:9
+15:14:14,32,31.61%,107.3MiB / 1GiB,ClientRead:11 WALSync:1
+15:14:16,35,30.85%,107.3MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:6
+15:14:18,36,24.17%,106.9MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:20,30,26.51%,106.9MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:14:22,30,26.97%,107MiB / 1GiB,ClientRead:12
+15:14:24,32,31.13%,107.1MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:26,20,28.50%,106.5MiB / 1GiB,ClientRead:11 WALSync:1
+15:14:28,28,25.09%,106.6MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:14:30,35,26.08%,106.6MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:14:32,33,26.31%,106.9MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:14:34,25,23.79%,106.7MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:14:36,30,25.04%,107.3MiB / 1GiB,ClientRead:12
+15:14:38,31,25.55%,106.9MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:14:40,26,30.64%,107.2MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:3 active:1
+15:14:42,23,26.68%,107MiB / 1GiB,ClientRead:3 WALSync:1 WALWrite:8
+15:14:44,25,24.80%,106.8MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:14:46,34,25.30%,106.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:14:48,21,25.17%,107.5MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:14:50,29,28.09%,107MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:14:52,29,28.01%,106.9MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:14:54,22,25.18%,107.5MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:14:56,31,31.68%,107.2MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:14:58,28,25.63%,107.3MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:00,29,24.70%,106.9MiB / 1GiB,ClientRead:4 WALWrite:7 active:1
+15:15:02,19,24.32%,107.5MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4 active:1
+15:15:04,27,25.71%,107.3MiB / 1GiB,ClientRead:5 WALSync:1 WALWrite:5 idle:1
+15:15:06,32,30.69%,107.8MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:15:08,23,24.73%,107.2MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:15:10,28,25.05%,107.7MiB / 1GiB,ClientRead:12
+15:15:12,36,26.95%,108.1MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:15:14,30,27.53%,108MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:16,32,27.48%,108.5MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:15:18,18,25.40%,108.1MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:20,27,23.89%,108.8MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:15:22,28,25.87%,108.7MiB / 1GiB,ClientRead:4 WALSync:1 WALWrite:4 active:3
+15:15:24,24,27.08%,108.5MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:1 active:1 idle:1
+15:15:26,29,26.90%,109MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:28,28,26.09%,108.8MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:15:30,27,22.82%,109.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:32,38,31.06%,109.6MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:3
+15:15:34,34,31.10%,110MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:36,30,27.40%,109.9MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:15:38,32,25.41%,109.8MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:40,20,25.33%,110.4MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:42,30,27.30%,110.3MiB / 1GiB,ClientRead:4 WALSync:1 WALWrite:7
+15:15:44,27,27.63%,110.8MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:46,33,26.04%,110.7MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:15:48,30,27.09%,110.7MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:50,23,23.12%,110.6MiB / 1GiB,ClientRead:10 active:1 idle:1
+15:15:52,29,25.47%,111.3MiB / 1GiB,ClientRead:7 WALSync:1 WALWrite:4
+15:15:54,32,25.48%,111.3MiB / 1GiB,ClientRead:9 WALSync:1 WALWrite:2
+15:15:56,34,25.51%,111.6MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:15:58,30,32.77%,111.7MiB / 1GiB,ClientRead:11 WALSync:1
+15:16:00,25,26.63%,112.1MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5
+15:16:02,27,25.24%,112.5MiB / 1GiB,ClientRead:6 WALSync:1 WALWrite:5 active:1
+15:16:04,28,26.65%,112.4MiB / 1GiB,ClientRead:10 WALSync:1 WALWrite:1
+15:16:06,26,25.65%,112.9MiB / 1GiB,ClientRead:8 WALSync:1 WALWrite:1 active:2
+15:16:08,22,27.99%,112.8MiB / 1GiB,ClientRead:12
+15:16:10,0,0.16%,112.7MiB / 1GiB,ClientRead:12
+15:16:12,0,0.15%,111.9MiB / 1GiB,ClientRead:12

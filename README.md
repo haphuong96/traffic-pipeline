@@ -22,6 +22,7 @@ docker compose up -d
 # 2. Install dependencies (once)
 (cd api && npm install)
 (cd simulator && npm install)
+(cd monitor && npm install)   # only needed for the long-run monitor
 
 # 3. Create the tables, then the 40,000 devices. Both are safe to re-run.
 cd api
@@ -43,6 +44,8 @@ sent=660 (66/s) reqs=660 200=660 400=0 5xx=0 timeouts=0 neterr=0 accepted=660 du
 ```
 
 `sent` counts every reading in every request, including retries. `buffered` is the number of readings waiting to be retried.
+
+The simulator also writes the same window as JSON to `simulator/metrics-latest.json` (overwritten every 10 seconds). The monitor below reads it.
 
 ### Grafana dashboard
 
@@ -70,6 +73,15 @@ Set these as environment variables, or put them in a `.env` file in `api/` or `s
 
 The API loads all devices into memory at startup. **Restart it after seeding** new devices.
 
+### Monitor (`monitor/`)
+
+| Env var                  | Default                                             | Meaning                                         |
+|--------------------------|-----------------------------------------------------|-------------------------------------------------|
+| `MONITOR_INTERVAL_MIN`   | `30`                                                | Minutes between samples (fractions allowed)     |
+| `DATABASE_URL`           | `postgres://traffic:traffic@localhost:5434/traffic` | Postgres connection                             |
+| `POSTGRES_CONTAINER`     | _(empty)_                                           | Container for `docker stats`; empty means `docker compose ps -q postgres` |
+| `SIMULATOR_METRICS_FILE` | `../simulator/metrics-latest.json`                  | Relative to `monitor/`                          |
+
 ### Simulator (`simulator/`)
 
 | Env var              | Default                          | Meaning                                         |
@@ -79,7 +91,9 @@ The API loads all devices into memory at startup. **Restart it after seeding** n
 | `API_URL`            | `http://localhost:8080/readings` |                                                 |
 | `REQUEST_TIMEOUT_MS` | `5000`                           | Includes time spent waiting for a free connection |
 | `MAX_CONNECTIONS`    | `128`                            | Keep-alive sockets to the API                   |
-| `METRICS_INTERVAL_MS`| `10000`                          | How often metrics are logged                    |
+| `METRICS_INTERVAL_MS`| `10000`                          | Length of a metrics window. Windows are aligned to the clock (:00–:10, :10–:20, …) |
+| `METRICS_FILE`       | `metrics-latest.json`            | Latest window as JSON, relative to `simulator/`; empty disables it |
+| `SEND_JITTER`        | `true`                           | `false`: send exactly on each interval boundary, with no random delay. Only for the spike test in `RESULTS.md` |
 
 Devices `dev-00001`…`dev-20000` report every 15 s and `dev-20001`…`dev-40000` every 60 s. To get both types in a small run, straddle the boundary:
 
@@ -112,9 +126,66 @@ A duplicate is a reading whose `(deviceId, intervalStart)` is already stored. If
 ```bash
 cd api && npm test          # needs Postgres running; uses a separate `traffic_test` database
 cd simulator && npm test
+cd monitor && npm test
 npm run typecheck           # in either package
 ```
 
 ## Load test
 
-See `RESULTS.md` for the procedure and results.
+See `RESULTS.md` for the procedure and results, including the spike and database-outage tests.
+
+Between test runs, empty the readings table so it doesn't fill the disk (this deletes all readings):
+
+```bash
+docker compose exec postgres psql -U traffic -d traffic -c "TRUNCATE raw_readings;"
+```
+
+### Long-run monitor
+
+For runs of several hours, leave the monitor running next to the API and simulator. It takes a sample right away and then every `MONITOR_INTERVAL_MIN` minutes (default 30) until you press Ctrl+C. Each sample is appended to `monitor/metrics.csv`:
+
+```bash
+cd monitor
+npm start                          # every 30 minutes
+MONITOR_INTERVAL_MIN=5 npm start   # every 5 minutes
+```
+
+Each sample records:
+
+- the time and the minutes elapsed since the monitor started
+- `raw_readings` total size, table size and index size, and the approximate row count (`pg_class.reltuples`, which stays empty until autovacuum has analyzed the table once)
+- the simulator's latest 10-second window, read from `simulator/metrics-latest.json`: device count, send rate, latency p50/p95/p99, 400 / 5xx / timeout / network-error counts, and buffered readings. `sim_age_s` is the file's age; if it is large, the simulator has stopped and those columns are old.
+- the wall-clock time of the Grafana city-wide panel's SQL over the last 1 hour and the last 6 hours, including fetching the rows
+- Postgres container CPU % and memory from `docker stats --no-stream`
+
+If one part fails (Docker not reachable, no simulator file), its columns are left empty and the monitor keeps going. Restarting appends to the same file, but elapsed time restarts at 0. To start over, delete or move `metrics.csv`.
+
+To turn the CSV into a Markdown table in `RESULTS.md`:
+
+```bash
+cd monitor && npm run report
+```
+
+This replaces everything between `<!-- monitor:start -->` and `<!-- monitor:end -->` in `RESULTS.md`, so you can re-run it at any time. If the markers are missing, it appends a new section.
+
+### Summarizing a simulator log
+
+The spike and outage tests happen over seconds, so the monitor's samples are too far apart for them. Their evidence is the simulator's own per-window log lines. Save the log with `npm start | tee ../name.log`, then:
+
+```bash
+cd monitor
+npm run timeline -- ../outage.log                                    # print the summary
+npm run timeline -- ../outage.log --restored 2026-09-30T14:04:00Z    # also measure recovery from this time
+npm run timeline -- ../outage.log --section outage                   # write it into RESULTS.md instead
+```
+
+The summary has:
+
+- totals of requests, 5xx, timeouts, network errors and 400s, plus the peak backlog and peak p99
+- when errors started and stopped
+- when the retry backlog got back to its level before the errors (`buffered` includes in-flight batches, so under load it is rarely 0)
+- with `--restored`, the errors after that time and how long until everything was back to normal
+- for windows of 5 s or less, p99 and errors by seconds past the minute, which shows the :00/:15/:30/:45 bursts
+- a per-window table of the unusual stretches, with quiet stretches collapsed to "…"
+
+`--section <name>` replaces the text between `<!-- name:start -->` and `<!-- name:end -->` in `RESULTS.md`. Logs saved by PowerShell (UTF-16) work too.

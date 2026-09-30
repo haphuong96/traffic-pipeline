@@ -1,0 +1,26 @@
+{
+  "name": "monitor",
+  "version": "1.0.0",
+  "description": "Samples load-test metrics into metrics.csv, summarizes simulator logs, and renders both into RESULTS.md",
+  "private": true,
+  "scripts": {
+    "start": "tsx --env-file-if-exists=.env src/index.ts",
+    "report": "tsx src/report.ts",
+    "timeline": "tsx src/timeline-cli.ts",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

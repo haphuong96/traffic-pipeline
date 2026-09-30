@@ -3,3 +3,4 @@ dist/
 .superpowers/
 *.log
 .env
+simulator/metrics-latest.json

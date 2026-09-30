@@ -1,0 +1,30 @@
+simulating 40000 devices (20000 × 15 s, 20000 × 60 s) → http://localhost:8080/readings
+expected ingest: 1666.7 readings/s = 100000 readings/min
+[2026-09-30T15:07:00.023Z] sent=3 (1/s) reqs=3 200=0 400=0 5xx=0 timeouts=0 neterr=0 accepted=0 dupes=0 buffered=3 latency p50=0ms p95=0ms p99=0ms
+[2026-09-30T15:07:05.026Z] sent=8489 (1698/s) reqs=8489 200=8482 400=0 5xx=0 timeouts=0 neterr=0 accepted=8482 dupes=0 buffered=10 latency p50=5ms p95=173ms p99=186ms
+[2026-09-30T15:07:10.028Z] sent=8311 (1662/s) reqs=8311 200=8310 400=0 5xx=0 timeouts=0 neterr=0 accepted=8310 dupes=0 buffered=11 latency p50=4ms p95=18ms p99=59ms
+[2026-09-30T15:07:15.027Z] sent=8277 (1655/s) reqs=8277 200=8280 400=0 5xx=0 timeouts=0 neterr=0 accepted=8280 dupes=0 buffered=8 latency p50=4ms p95=13ms p99=22ms
+[2026-09-30T15:07:20.028Z] sent=8307 (1661/s) reqs=8307 200=8276 400=0 5xx=0 timeouts=0 neterr=0 accepted=8276 dupes=0 buffered=39 latency p50=4ms p95=9ms p99=13ms
+[2026-09-30T15:07:25.030Z] sent=8305 (1661/s) reqs=8305 200=8334 400=0 5xx=0 timeouts=0 neterr=0 accepted=8334 dupes=0 buffered=10 latency p50=4ms p95=22ms p99=53ms
+[2026-09-30T15:07:30.029Z] sent=8406 (1681/s) reqs=8406 200=8401 400=0 5xx=0 timeouts=0 neterr=0 accepted=8401 dupes=0 buffered=15 latency p50=4ms p95=13ms p99=34ms
+[2026-09-30T15:07:35.029Z] sent=8303 (1661/s) reqs=8303 200=8312 400=0 5xx=0 timeouts=0 neterr=0 accepted=8312 dupes=0 buffered=6 latency p50=4ms p95=12ms p99=27ms
+[2026-09-30T15:07:40.030Z] sent=8249 (1650/s) reqs=8249 200=8233 400=0 5xx=0 timeouts=0 neterr=0 accepted=8233 dupes=0 buffered=22 latency p50=4ms p95=16ms p99=52ms
+[2026-09-30T15:07:45.033Z] sent=8307 (1661/s) reqs=8307 200=8326 400=0 5xx=0 timeouts=0 neterr=0 accepted=8326 dupes=0 buffered=3 latency p50=4ms p95=17ms p99=42ms
+[2026-09-30T15:07:50.033Z] sent=8446 (1689/s) reqs=8446 200=8435 400=0 5xx=0 timeouts=0 neterr=0 accepted=8435 dupes=0 buffered=14 latency p50=4ms p95=13ms p99=31ms
+[2026-09-30T15:07:55.035Z] sent=8283 (1657/s) reqs=8283 200=8276 400=0 5xx=0 timeouts=0 neterr=0 accepted=8276 dupes=0 buffered=21 latency p50=4ms p95=13ms p99=32ms
+[2026-09-30T15:08:00.036Z] sent=8378 (1676/s) reqs=8378 200=8388 400=0 5xx=0 timeouts=0 neterr=0 accepted=8388 dupes=0 buffered=11 latency p50=4ms p95=15ms p99=26ms
+[2026-09-30T15:08:05.038Z] sent=8409 (1682/s) reqs=8409 200=8395 400=0 5xx=0 timeouts=0 neterr=0 accepted=8395 dupes=0 buffered=25 latency p50=4ms p95=18ms p99=45ms
+[2026-09-30T15:08:10.037Z] sent=8335 (1667/s) reqs=8335 200=8346 400=0 5xx=0 timeouts=0 neterr=0 accepted=8346 dupes=0 buffered=14 latency p50=6ms p95=28ms p99=47ms
+[2026-09-30T15:08:15.039Z] sent=8308 (1662/s) reqs=8308 200=7861 400=0 5xx=0 timeouts=0 neterr=0 accepted=7861 dupes=0 buffered=461 latency p50=168ms p95=274ms p99=283ms
+[2026-09-30T15:08:20.038Z] sent=8273 (1655/s) reqs=8273 200=7737 400=0 5xx=0 timeouts=0 neterr=0 accepted=7737 dupes=0 buffered=997 latency p50=609ms p95=629ms p99=640ms
+[2026-09-30T15:08:25.037Z] sent=8246 (1649/s) reqs=8246 200=7652 400=0 5xx=0 timeouts=0 neterr=0 accepted=7652 dupes=0 buffered=1591 latency p50=870ms p95=969ms p99=973ms
+[2026-09-30T15:08:30.038Z] sent=8453 (1691/s) reqs=8453 200=7596 400=0 5xx=0 timeouts=0 neterr=0 accepted=7596 dupes=0 buffered=2452 latency p50=1205ms p95=1421ms p99=1424ms
+[2026-09-30T15:08:35.038Z] sent=8280 (1656/s) reqs=8280 200=7797 400=0 5xx=0 timeouts=0 neterr=0 accepted=7797 dupes=0 buffered=2931 latency p50=1568ms p95=1755ms p99=1764ms
+[2026-09-30T15:08:40.037Z] sent=8324 (1665/s) reqs=8324 200=7455 400=0 5xx=0 timeouts=0 neterr=0 accepted=7455 dupes=0 buffered=3800 latency p50=1999ms p95=2227ms p99=2247ms
+[2026-09-30T15:08:45.037Z] sent=8385 (1677/s) reqs=8385 200=7770 400=0 5xx=0 timeouts=0 neterr=0 accepted=7770 dupes=0 buffered=4422 latency p50=2543ms p95=2614ms p99=2618ms
+[2026-09-30T15:08:50.039Z] sent=8329 (1666/s) reqs=8329 200=7807 400=0 5xx=0 timeouts=0 neterr=0 accepted=7807 dupes=0 buffered=4937 latency p50=2819ms p95=2855ms p99=2860ms
+[2026-09-30T15:08:55.041Z] sent=8250 (1650/s) reqs=8250 200=7630 400=0 5xx=0 timeouts=0 neterr=0 accepted=7630 dupes=0 buffered=5557 latency p50=3149ms p95=3354ms p99=3372ms
+[2026-09-30T15:09:00.041Z] sent=8382 (1676/s) reqs=8382 200=7786 400=0 5xx=0 timeouts=0 neterr=0 accepted=7786 dupes=0 buffered=6170 latency p50=3414ms p95=3647ms p99=3656ms
+[2026-09-30T15:09:05.045Z] sent=8238 (1648/s) reqs=8238 200=7815 400=0 5xx=0 timeouts=0 neterr=0 accepted=7815 dupes=0 buffered=6576 latency p50=3874ms p95=3910ms p99=3919ms
+[2026-09-30T15:09:10.045Z] sent=8320 (1664/s) reqs=8320 200=7897 400=0 5xx=0 timeouts=0 neterr=0 accepted=7897 dupes=0 buffered=6999 latency p50=4090ms p95=4221ms p99=4227ms
+[2026-09-30T15:09:15.045Z] sent=8455 (1691/s) reqs=8455 200=7597 400=0 5xx=0 timeouts=0 neterr=0 accepted=7597 dupes=0 buffered=7876 latency p50=4490ms p95=4626ms p99=4639ms

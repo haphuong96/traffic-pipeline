@@ -22,6 +22,8 @@ export interface DeviceConfig {
   deviceId: string;
   intervalSeconds: number;
   baseRatePerMinute: number;
+  /** Random send delay after each boundary (default true). */
+  sendJitter?: boolean;
 }
 
 export interface DeviceDeps {
@@ -77,7 +79,8 @@ export class SimDevice {
     // Send jitter: 0 to one full interval after the boundary, so 20,000
     // devices don't all hit the API in the same millisecond. The reading's
     // intervalStart is still the aligned boundary, whenever we send it.
-    const jitter = random() * this.cfg.intervalSeconds * 1000;
+    // SEND_JITTER=false turns it off to reproduce the spike.
+    const jitter = this.cfg.sendJitter === false ? 0 : random() * this.cfg.intervalSeconds * 1000;
     // max(0, …): if we're already behind schedule, fire now and catch up.
     clock.setTimeout(() => this.onIntervalEnd(boundary), Math.max(0, boundary - clock.now() + jitter));
   }
