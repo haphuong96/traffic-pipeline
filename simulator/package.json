@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
-    "start": "tsx src/index.ts",
+    "start": "tsx --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc"
   },
   "keywords": [],

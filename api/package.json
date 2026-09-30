@@ -8,9 +8,9 @@
   },
   "scripts": {
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
-    "start": "tsx src/index.ts",
-    "migrate": "tsx src/migrate.ts",
-    "seed": "tsx src/seed.ts",
+    "start": "tsx --env-file-if-exists=.env src/index.ts",
+    "migrate": "tsx --env-file-if-exists=.env src/migrate.ts",
+    "seed": "tsx --env-file-if-exists=.env src/seed.ts",
     "typecheck": "tsc"
   },
   "keywords": [],

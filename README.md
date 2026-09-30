@@ -55,6 +55,8 @@ It has four panels: vehicles per 1 minute and per 15 minutes for the device in t
 
 ## Configuration
 
+Set these as environment variables, or put them in a `.env` file in `api/` or `simulator/`. Copy `.env.example` to `.env` to start. `npm start`, `migrate` and `seed` load it automatically, and a variable set in the shell wins over `.env`. `.env` is git-ignored.
+
 ### API (`api/`)
 
 | Env var             | Default                                               | Meaning                                   |
