@@ -13,7 +13,7 @@ simulator --HTTP POST /readings--> api --produce--> Kafka "readings" --consume--
 
 1. The **API** validates a batch exactly as before. It sends one Kafka message per reading, keyed by `deviceId` so a device's readings stay in order. It answers **200 `{ queued: n }`** only after Kafka has confirmed them (`acks=all`). The API never touches Postgres after startup.
 2. The **consumer** collects messages until it has 5,000 or 500 ms has passed, then writes them with **one** `INSERT … ON CONFLICT DO NOTHING`: one commit per batch instead of one per request.
-3. It commits the Kafka offsets **only after** the Postgres commit. A crash in between means some messages are redelivered, and the primary key turns them into harmless duplicates. Nothing is lost, and nothing is counted twice.
+3. It commits the Kafka offsets **only after** the Postgres commit. A crash in between means some messages are redelivered, and the primary key turns them into harmless duplicates. Nothing is lost, and nothing is counted twice. One caveat: with a single broker, Kafka confirms a write once it's in the OS page cache, so a crash of the whole machine (not just a container restart) can lose the last few seconds of confirmed readings.
 4. If Postgres is down, the consumer retries the same batch every few seconds. Meanwhile the API keeps answering 200, and the backlog waits in Kafka as **consumer lag**.
 
 ## Prerequisites
@@ -109,14 +109,15 @@ The API loads all devices into memory at startup. **Restart it after seeding** n
 |-----------------------|-----------------------------------------------------|-------------------------------------------------|
 | `DATABASE_URL`        | `postgres://traffic:traffic@localhost:5434/traffic` |                                                 |
 | `PG_POOL_SIZE`        | `2`                                                 |                                                 |
+| `PG_QUERY_TIMEOUT_MS` | `30000`                                             | Abandon (and retry) a database write that hangs |
 | `KAFKA_BROKERS`       | `localhost:9094`                                    |                                                 |
 | `KAFKA_TOPIC`         | `readings`                                          |                                                 |
 | `KAFKA_GROUP_ID`      | `raw-writer`                                        | Instances with the same group share the partitions |
-| `BATCH_MAX_ROWS`      | `5000`                                              | Flush at this many messages… (max 15,000)       |
+| `BATCH_MAX_ROWS`      | `5000`                                              | Flush at this many messages… (max 6,000: see below) |
 | `BATCH_MAX_WAIT_MS`   | `500`                                               | …or after this long, whichever comes first      |
 | `METRICS_INTERVAL_MS` | `10000`                                             |                                                 |
 
-You can run up to 6 consumers, one per partition, to share the work. Start more terminals with `npm start`.
+A batch can never hold more than 6 × 1,000 messages: each partition worker hands over at most 1,000 and then waits until they're stored. With several consumers sharing the partitions, each one's batches are smaller still, so most flushes happen on the timer. You can run up to 6 consumers, one per partition, to share the work. Start more terminals with `npm start`.
 
 ### Monitor (`monitor/`)
 

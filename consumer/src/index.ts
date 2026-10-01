@@ -1,7 +1,7 @@
-import pg from 'pg';
 import { config } from './config.ts';
 import { Metrics, type Log } from './batch-writer.ts';
 import { startConsumer } from './run.ts';
+import { createPool } from './pool.ts';
 
 const log: Log = {
   info: (msg, obj) => console.log(JSON.stringify({ level: 'info', time: new Date().toISOString(), msg, ...obj })),
@@ -9,11 +9,7 @@ const log: Log = {
   error: (msg, obj) => console.error(JSON.stringify({ level: 'error', time: new Date().toISOString(), msg, ...obj })),
 };
 
-// connectionTimeoutMillis: fail fast when Postgres is unreachable instead of
-// hanging (in Phase 1 a hung connect kept the API stuck for 1.5 minutes after
-// Postgres was already back). A failed write is simply retried.
-const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.poolSize, connectionTimeoutMillis: 5000 });
-pool.on('error', (err) => log.warn('idle pg client error', { error: err.message }));
+const pool = createPool(config, (err) => log.warn('idle pg client error', { error: err.message }));
 
 const consumer = await startConsumer({
   brokers: config.brokers,

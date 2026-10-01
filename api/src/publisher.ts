@@ -23,6 +23,27 @@ export interface PublisherOptions {
   topic: string;
   /** Give up on a message after this long; the request then gets a 503. */
   produceTimeoutMs: number;
+  /** Called when the producer hit an unrecoverable error (see isFatalKafkaError). */
+  onFatal?: (err: unknown) => void;
+}
+
+/** The subset of the producer we use; tests pass a fake. */
+interface ProducerLike {
+  connect(): Promise<unknown>;
+  disconnect(): Promise<unknown>;
+  send(record: { topic: string; messages: { key: string; value: string }[] }): Promise<unknown>;
+}
+
+/**
+ * True for librdkafka's "fatal" errors (code -150, ERR__FATAL). The
+ * idempotent producer raises one when it can no longer guarantee ordering
+ * or no-duplicates, e.g. OUT_OF_ORDER_SEQUENCE_NUMBER after a single broker
+ * lost acknowledged data. After that, every send fails until the producer
+ * is recreated. A timeout is NOT fatal: the next send may well work.
+ */
+export function isFatalKafkaError(err: unknown): boolean {
+  const e = err as { code?: unknown; fatal?: unknown } | null;
+  return e?.code === -150 || e?.fatal === true;
 }
 
 /**
@@ -33,14 +54,18 @@ export interface PublisherOptions {
  * Postgres". That's the consumer's job, later.
  */
 export class Publisher {
-  private producer;
+  private producer: ProducerLike;
   private connected = false;
   /** False after a failed send, until a send succeeds again. Drives /health. */
   private lastSendOk = true;
 
-  constructor(private readonly opts: PublisherOptions) {
+  constructor(private readonly opts: PublisherOptions, producer?: ProducerLike) {
+    this.producer = producer ?? Publisher.createProducer(opts);
+  }
+
+  private static createProducer(opts: PublisherOptions): ProducerLike {
     const kafka = new Kafka({ kafkaJS: { brokers: opts.brokers, logLevel: logLevel.WARN } });
-    this.producer = kafka.producer({
+    return kafka.producer({
       // Wait for all in-sync replicas (just one broker here, but the setting is
       // what you'd use in production).
       acks: -1, // -1 = "all"
@@ -68,6 +93,7 @@ export class Publisher {
       this.lastSendOk = true;
     } catch (err) {
       this.lastSendOk = false;
+      if (isFatalKafkaError(err)) this.opts.onFatal?.(err);
       throw err;
     }
   }

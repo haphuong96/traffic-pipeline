@@ -90,6 +90,9 @@ test('readings flow API → Kafka → Postgres; a consumer restart loses nothing
   consumer = await startConsumer(opts);
   await waitForRows(300);
   await new Promise((r) => setTimeout(r, 1000)); // let the duplicates land too
+  // Offsets really were committed: nothing left for the group to read. (If
+  // commits silently failed, ON CONFLICT would hide it from the row counts.)
+  assert.equal(await consumer.lag(), 0, 'all offsets committed');
   await consumer.stop();
 
   assert.equal(await rowCount(), 300, 'each (device, interval) stored exactly once');

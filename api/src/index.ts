@@ -11,7 +11,18 @@ const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 1, connect
 const devices = await loadDevices(pool);
 await pool.end();
 
-const publisher = new Publisher({ brokers: config.kafkaBrokers, topic: config.kafkaTopic, produceTimeoutMs: config.produceTimeoutMs });
+const publisher = new Publisher({
+  brokers: config.kafkaBrokers,
+  topic: config.kafkaTopic,
+  produceTimeoutMs: config.produceTimeoutMs,
+  // An idempotent producer that hit a fatal error stays broken: every send
+  // would fail and we'd answer 503 forever. Crash instead, so a restart gives
+  // us a fresh producer. Devices keep their readings buffered meanwhile.
+  onFatal: (err) => {
+    console.error('fatal Kafka producer error, exiting so the API can be restarted:', err);
+    process.exit(1);
+  },
+});
 await publisher.connect();
 
 const app = buildApp({

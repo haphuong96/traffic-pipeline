@@ -15,6 +15,7 @@ export const KAFKA_BATCH_SIZE = 1000;
 export const config = {
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://traffic:traffic@localhost:5434/traffic',
   poolSize: intEnv('PG_POOL_SIZE', 2),
+  queryTimeoutMs: intEnv('PG_QUERY_TIMEOUT_MS', 30_000),
   brokers: (process.env.KAFKA_BROKERS ?? 'localhost:9094').split(','),
   topic: process.env.KAFKA_TOPIC ?? 'readings',
   groupId: process.env.KAFKA_GROUP_ID ?? 'raw-writer',
@@ -23,11 +24,20 @@ export const config = {
   metricsIntervalMs: intEnv('METRICS_INTERVAL_MS', 10_000),
 };
 
-// One INSERT uses 3 parameters per row, and Postgres allows at most 65,535
-// parameters per statement, i.e. 21,845 rows. A batch can overshoot
-// BATCH_MAX_ROWS: while one flush runs, each partition worker may add one
-// more Kafka batch. So the worst case is maxRows + 6 × 1000 rows.
-const worstCase = config.batchMaxRows + PARTITION_CONCURRENCY * KAFKA_BATCH_SIZE;
-if (worstCase > 21_000) {
-  throw new Error(`BATCH_MAX_ROWS=${config.batchMaxRows} is too large: a batch could reach ${worstCase} rows (limit 21,000). Use at most 15000.`);
+/**
+ * The biggest batch that can ever build up. Each partition worker hands over
+ * at most KAFKA_BATCH_SIZE messages and then WAITS until they're stored, so
+ * at most PARTITION_CONCURRENCY × KAFKA_BATCH_SIZE messages are pending at
+ * once (fewer if this consumer owns fewer partitions, e.g. when several
+ * consumers share the topic). 6,000 rows × 3 parameters is also safely under
+ * Postgres' 65,535-parameter limit for one INSERT.
+ */
+export const maxReachableBatch = PARTITION_CONCURRENCY * KAFKA_BATCH_SIZE;
+
+/** A larger BATCH_MAX_ROWS would never trigger a flush, so reject it rather than silently ignore it. */
+export function validateBatchMaxRows(n: number): void {
+  if (n > maxReachableBatch) {
+    throw new Error(`BATCH_MAX_ROWS=${n} can never be reached (at most ${maxReachableBatch} messages can be pending); use at most ${maxReachableBatch}.`);
+  }
 }
+validateBatchMaxRows(config.batchMaxRows);

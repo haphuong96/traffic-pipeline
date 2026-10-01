@@ -160,3 +160,16 @@ One consumer instance is the default. You can run up to 6, one per partition, to
 - **Batching inside the KafkaJS-style API.** `eachMessage` / `eachBatch` deliver per partition, and we accumulate across partitions. Pausing and resuming has to be done carefully, so the client doesn't keep fetching into memory while a flush is in progress. The implementation plan should prove this with a test before building on it.
 - **Single broker:** an acknowledged message sits in the OS page cache, not on disk. A crash of the whole machine can lose recently acknowledged readings. Restarting a container cannot. This is acceptable for a learning setup and is documented.
 - **Disk:** 24 h retention at 40k devices is several GB even with lz4. Watch `docker system df` during long runs.
+
+## Implementation notes (deviations, 2026-10-01)
+
+Decided during implementation. Each is reflected in the code and README.
+
+- **No manual pause/resume.** Each partition's `eachBatch` callback awaits `BatchWriter.add()`, which resolves only after the Postgres commit and the offset commit. Blocking the callback is the backpressure.
+- **Batch size bound.** Because of that blocking, at most 6 partitions × 1,000 messages can be pending at once, so `BATCH_MAX_ROWS` is capped at **6,000**, not 20,000. A larger value could never trigger a flush.
+- **Rebalance.** An in-flight flush still completes and commits instead of being discarded. If the commit fails because the partition has moved, it's logged; the result is redelivered duplicates, never loss.
+- **Database retry backoff** is capped at **5 s**, not 30 s: there's a single consumer, so no herd to spread out. In a live test the 30 s cap left it idle for 28 s after Postgres was already back.
+- **Pool timeouts:** `connectionTimeoutMillis` 5 s plus `query_timeout` (`PG_QUERY_TIMEOUT_MS`, 30 s), so a Postgres that hangs, rather than refusing connections, still leads to a retry.
+- **Consumer lag** comes from the broker (log end − committed offset via the admin client), not from the client's last fetch. The latter reads 0 while the consumer is blocked.
+- **Fatal producer errors** (librdkafka `ERR__FATAL`, e.g. out-of-order sequence after data loss) make the API exit, so a restart creates a fresh producer instead of answering 503 forever.
+- **Long Postgres outages (> 5–10 min)** exceed the consumer's max poll interval. It leaves the group and rejoins from the committed offsets once the write completes: a rebalance plus duplicates, no loss.
