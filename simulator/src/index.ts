@@ -64,7 +64,7 @@ function reportWindow(): void {
     `[${new Date().toISOString()}] ` +
       `sent=${s.readingsSent} (${(s.readingsSent / windowSeconds).toFixed(0)}/s) reqs=${s.requests} ` +
       `200=${s.status200} 400=${s.status400} 5xx=${s.status5xx} timeouts=${s.timeouts} neterr=${s.networkErrors} ` +
-      `accepted=${s.accepted} dupes=${s.duplicates} buffered=${buffered} ` +
+      `queued=${s.queued} buffered=${buffered} ` +
       `latency p50=${s.p50}ms p95=${s.p95}ms p99=${s.p99}ms`,
   );
   void writeMetricsFile({

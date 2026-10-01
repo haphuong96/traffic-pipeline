@@ -9,8 +9,7 @@ export function percentile(sorted: number[], p: number): number {
 export class Metrics {
   requests = 0;
   readingsSent = 0; // readings inside requests, including retries
-  accepted = 0;
-  duplicates = 0;
+  queued = 0; // readings the API confirmed are in Kafka
   status200 = 0;
   status400 = 0;
   status5xx = 0;
@@ -23,8 +22,7 @@ export class Metrics {
     return {
       requests: this.requests,
       readingsSent: this.readingsSent,
-      accepted: this.accepted,
-      duplicates: this.duplicates,
+      queued: this.queued,
       status200: this.status200,
       status400: this.status400,
       status5xx: this.status5xx,

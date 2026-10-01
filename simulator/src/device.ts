@@ -14,7 +14,7 @@ export interface Clock {
 
 /** What the device needs to know from a send attempt (SendResult fits). */
 export type SendOutcome =
-  | { kind: 'ok'; accepted?: number; duplicates?: number; latencyMs?: number }
+  | { kind: 'ok'; queued?: number; latencyMs?: number }
   | { kind: 'rejected'; reason: string; latencyMs?: number }
   | { kind: 'retry'; reason: string; latencyMs?: number };
 
@@ -128,8 +128,7 @@ export class SimDevice {
 
     if (outcome.kind === 'ok') {
       metrics.status200++;
-      metrics.accepted += outcome.accepted ?? 0;
-      metrics.duplicates += outcome.duplicates ?? 0;
+      metrics.queued += outcome.queued ?? 0;
     } else {
       // 400: the data itself is wrong, so resending would fail forever.
       // Drop it and make noise about it: this is a bug to fix, not to retry.

@@ -1,12 +1,20 @@
-# Traffic Pipeline — Phase 1
+# Traffic Pipeline
 
-Simulated road sensors report vehicle counts to an API that stores them in Postgres, and Grafana charts them.
+Simulated road sensors report vehicle counts. The API queues them in Kafka, a consumer stores them in Postgres in large batches, and Grafana charts them.
 
 ```
-simulator (Node) --HTTP POST /readings--> api (Fastify) --> Postgres <-- Grafana
+simulator --HTTP POST /readings--> api --produce--> Kafka "readings" --consume--> consumer --batch INSERT--> Postgres <-- Grafana
 ```
 
-Phase 1 is deliberately the simplest thing that works: no queue, no time-series extension, no pre-aggregation. The point is to load-test it and see where it breaks (see `RESULTS.md`). The design is in `phase-1-plan.md`.
+- **Phase 1** (git tag `phase-1`): the API inserted straight into Postgres, one commit per request. The load tests in `RESULTS.md` show where that breaks: commit-bound Postgres, and a collapse when overloaded.
+- **Phase 2** (now): Kafka decouples ingestion from storage. The design is in `docs/superpowers/specs/2026-10-01-phase-2-kafka-design.md`.
+
+### How data flows now
+
+1. The **API** validates a batch exactly as before. It sends one Kafka message per reading, keyed by `deviceId` so a device's readings stay in order. It answers **200 `{ queued: n }`** only after Kafka has confirmed them (`acks=all`). The API never touches Postgres after startup.
+2. The **consumer** collects messages until it has 5,000 or 500 ms has passed, then writes them with **one** `INSERT … ON CONFLICT DO NOTHING`: one commit per batch instead of one per request.
+3. It commits the Kafka offsets **only after** the Postgres commit. A crash in between means some messages are redelivered, and the primary key turns them into harmless duplicates. Nothing is lost, and nothing is counted twice.
+4. If Postgres is down, the consumer retries the same batch every few seconds. Meanwhile the API keeps answering 200, and the backlog waits in Kafka as **consumer lag**.
 
 ## Prerequisites
 
@@ -16,11 +24,13 @@ Phase 1 is deliberately the simplest thing that works: no queue, no time-series 
 ## Run it
 
 ```bash
-# 1. Start Postgres (host port 5434) and Grafana (host port 4000)
+# 1. Start Postgres (:5434), Grafana (:4000), Kafka (:9094) and kafka-ui (:8081).
+#    kafka-init creates the `readings` topic (6 partitions) and exits.
 docker compose up -d
 
 # 2. Install dependencies (once)
 (cd api && npm install)
+(cd consumer && npm install)
 (cd simulator && npm install)
 (cd monitor && npm install)   # only needed for the long-run monitor
 
@@ -32,15 +42,33 @@ npm run seed
 # 4. Start the API on :8080 (leave it running)
 npm start
 
-# 5. In another terminal, from the repo root: start the simulator (1,000 devices by default)
+# 5. In another terminal, from the repo root: start the consumer (leave it running)
+cd consumer
+npm start
+
+# 6. In a third terminal, from the repo root: start the simulator (1,000 devices by default)
 cd simulator
 npm start
 ```
 
+The order of 4 and 5 doesn't matter: whatever the API queues before the consumer starts waits in Kafka.
+
+Every 10 seconds the consumer logs a JSON line like:
+
+```
+{"level":"info","msg":"metrics","batches":20,"inserted":424,"duplicates":0,"skipped":0,"storeRetries":0,"avgBatch":21,"flushMsP50":5,"flushMsMax":7,"endToEndMsP50":770,"endToEndMsMax":1021,"lag":36}
+```
+
+- `endToEnd`: time from the API accepting a reading to it being in Postgres.
+- `lag`: messages in Kafka not yet stored.
+- `storeRetries`: failed database writes, which are retried.
+
+kafka-ui at http://localhost:8081 shows the same lag under Consumers → `raw-writer`.
+
 Every 10 seconds the simulator logs something like:
 
 ```
-sent=660 (66/s) reqs=660 200=660 400=0 5xx=0 timeouts=0 neterr=0 accepted=660 dupes=0 buffered=0 latency p50=5ms p95=8ms p99=20ms
+sent=660 (66/s) reqs=660 200=660 400=0 5xx=0 timeouts=0 neterr=0 queued=660 buffered=0 latency p50=5ms p95=8ms p99=20ms
 ```
 
 `sent` counts every reading in every request, including retries. `buffered` is the number of readings waiting to be retried.
@@ -54,24 +82,41 @@ The dashboard is committed as `grafana/dashboard.json`. Import it in either of t
 - **UI:** Grafana (http://localhost:4000) → Dashboards → New → Import → upload `grafana/dashboard.json`, then choose the PostgreSQL data source in the dashboard's **Data source** dropdown.
 - **Script:** `GRAFANA_USER=admin GRAFANA_PASSWORD=... ./grafana/import.sh`
 
-It has four panels: vehicles per 1 minute and per 15 minutes for the device in the **Device** box, city-wide vehicles per minute, and the ingest rate. All aggregation is computed on the fly from `raw_readings`. That is intentional in Phase 1.
+The ingest-rate panel counts rows by `received_at`, which is when the **consumer** wrote them. It shows storage throughput, not the API's receive rate. It has four panels: vehicles per 1 minute and per 15 minutes for the device in the **Device** box, city-wide vehicles per minute, and the ingest rate. All aggregation is computed on the fly from `raw_readings`. That is intentional in Phase 1.
 
 ## Configuration
 
-Set these as environment variables, or put them in a `.env` file in `api/` or `simulator/`. Copy `.env.example` to `.env` to start. `npm start`, `migrate` and `seed` load it automatically, and a variable set in the shell wins over `.env`. `.env` is git-ignored.
+Set these as environment variables, or put them in a `.env` file in `api/`, `consumer/` or `simulator/`. Copy `.env.example` to `.env` to start. `npm start`, `migrate` and `seed` load it automatically, and a variable set in the shell wins over `.env`. `.env` is git-ignored.
 
 ### API (`api/`)
 
 | Env var             | Default                                               | Meaning                                   |
 |---------------------|-------------------------------------------------------|-------------------------------------------|
-| `DATABASE_URL`      | `postgres://traffic:traffic@localhost:5434/traffic`   | Postgres connection                       |
-| `PG_POOL_SIZE`      | `10`                                                  | Max concurrent Postgres connections       |
+| `DATABASE_URL`      | `postgres://traffic:traffic@localhost:5434/traffic`   | Postgres connection (only used at startup, to load devices) |
+| `KAFKA_BROKERS`     | `localhost:9094`                                      | Comma-separated                           |
+| `KAFKA_TOPIC`       | `readings`                                            |                                           |
+| `PRODUCE_TIMEOUT_MS`| `3000`                                                | Give up on Kafka after this long and answer 503. Keep it below the simulator's timeout |
 | `PORT`              | `8080`                                                |                                           |
 | `LOG_LEVEL`         | `info`                                                |                                           |
 | `LOG_REQUESTS`      | `false`                                               | One log line per request (noisy under load) |
 | `SEED_DEVICE_COUNT` | `40000`                                               | Used by `npm run seed`                    |
 
 The API loads all devices into memory at startup. **Restart it after seeding** new devices.
+
+### Consumer (`consumer/`)
+
+| Env var               | Default                                             | Meaning                                         |
+|-----------------------|-----------------------------------------------------|-------------------------------------------------|
+| `DATABASE_URL`        | `postgres://traffic:traffic@localhost:5434/traffic` |                                                 |
+| `PG_POOL_SIZE`        | `2`                                                 |                                                 |
+| `KAFKA_BROKERS`       | `localhost:9094`                                    |                                                 |
+| `KAFKA_TOPIC`         | `readings`                                          |                                                 |
+| `KAFKA_GROUP_ID`      | `raw-writer`                                        | Instances with the same group share the partitions |
+| `BATCH_MAX_ROWS`      | `5000`                                              | Flush at this many messages… (max 15,000)       |
+| `BATCH_MAX_WAIT_MS`   | `500`                                               | …or after this long, whichever comes first      |
+| `METRICS_INTERVAL_MS` | `10000`                                             |                                                 |
+
+You can run up to 6 consumers, one per partition, to share the work. Start more terminals with `npm start`.
 
 ### Monitor (`monitor/`)
 
@@ -113,21 +158,22 @@ The traffic model uses the simulator's **local** time of day, with rush hours at
 
 | Status | When | Body |
 |--------|------|------|
-| 200 | stored, including duplicates | `{ "accepted": 1, "duplicates": 0 }` |
-| 400 | any reading invalid; nothing is stored | `{ "index": 0, "reason": "..." }` (`index` is `null` for body-level errors) |
-| 500 | database error; the device should retry | |
+| 200 | durably queued in Kafka (stored in Postgres shortly after) | `{ "queued": 1 }` |
+| 400 | any reading invalid; nothing is queued | `{ "index": 0, "reason": "..." }` (`index` is `null` for body-level errors) |
+| 503 | Kafka didn't confirm in time; the device should retry | |
 
-A duplicate is a reading whose `(deviceId, intervalStart)` is already stored. If its vehicle count differs from the stored one, the API logs a warning, because that points to a device bug. The first value is kept.
+A duplicate is a reading whose `(deviceId, intervalStart)` is already stored. The consumer counts it and skips it. If its vehicle count differs from the stored one, the **consumer** logs a warning, because that points to a device bug. The first value is kept.
 
-`GET /health` returns 200 `{ "status": "ok" }`, or 503 if Postgres is unreachable.
+`GET /health` returns 200 `{ "status": "ok" }`, or 503 if the producer isn't connected or the last send to Kafka failed.
 
 ## Tests
 
 ```bash
 cd api && npm test          # needs Postgres running; uses a separate `traffic_test` database
+cd consumer && npm test     # needs Postgres and Kafka; the end-to-end test uses a throwaway topic
 cd simulator && npm test
 cd monitor && npm test
-npm run typecheck           # in either package
+npm run typecheck           # in any package
 ```
 
 ## Load test

@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import type { Reading } from './validate.ts';
+import type { Reading } from './message.ts';
 
 export interface InsertResult {
   accepted: number;
@@ -88,4 +88,17 @@ async function warnOnConflictingDuplicates(
       );
     }
   }
+}
+
+/**
+ * True when Postgres rejected the DATA (SQLSTATE class 22 "data exception" or
+ * 23 "integrity constraint violation", e.g. an unknown device_id). Retrying
+ * the same rows would fail forever, so the caller skips them instead.
+ *
+ * Anything else (connection refused, timeouts, the server shutting down…)
+ * is treated as temporary: the caller keeps the batch and retries it.
+ */
+export function isDataError(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && /^2[23][0-9A-Z]{3}$/.test(code);
 }

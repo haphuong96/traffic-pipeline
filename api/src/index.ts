@@ -2,39 +2,35 @@ import pg from 'pg';
 import { config } from './config.ts';
 import { buildApp } from './app.ts';
 import { loadDevices } from './devices.ts';
-import { insertReadings } from './store.ts';
+import { Publisher } from './publisher.ts';
 
-// One pool for the whole process. Its size caps how many INSERTs run in
-// Postgres at the same time; extra requests wait in the pool's queue, with
-// no time limit (pg's default connectionTimeoutMillis is 0).
-const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.poolSize });
-// Without this handler an idle client losing its connection (e.g. Postgres
-// restarts) would emit an unhandled 'error' event and crash the process.
-pool.on('error', (err) => console.error('idle pg client error', err.message));
-
-// Loaded once: validating 1,000+ readings/s with a DB lookup each would put
-// far more load on Postgres than the inserts themselves. Trade-off: devices
-// seeded after startup are unknown until the API restarts.
+// Postgres is only needed once, to load the devices. After that the API
+// never touches the database: it validates and hands readings to Kafka.
+// Trade-off: devices seeded after startup are unknown until the API restarts.
+const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 1, connectionTimeoutMillis: 5000 });
 const devices = await loadDevices(pool);
+await pool.end();
+
+const publisher = new Publisher({ brokers: config.kafkaBrokers, topic: config.kafkaTopic, produceTimeoutMs: config.produceTimeoutMs });
+await publisher.connect();
 
 const app = buildApp({
   devices,
-  store: (readings) => insertReadings(pool, readings, app.log),
-  ping: async () => {
-    await pool.query('SELECT 1');
-  },
+  publish: (readings, receivedAt) => publisher.publish(readings, receivedAt),
+  isReady: () => publisher.isReady(),
   logger: { level: config.logLevel },
   logRequests: config.logRequests,
 });
 
-app.log.info({ devices: devices.size, poolSize: config.poolSize }, 'devices loaded');
+app.log.info({ devices: devices.size, topic: config.kafkaTopic }, 'devices loaded, producer connected');
 await app.listen({ port: config.port, host: config.host });
 
-// Graceful shutdown: stop accepting requests, let in-flight ones finish.
+// Graceful shutdown: stop accepting requests, let in-flight ones finish,
+// then flush anything the producer still holds.
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, async () => {
     await app.close();
-    await pool.end();
+    await publisher.disconnect();
     process.exit(0);
   });
 }

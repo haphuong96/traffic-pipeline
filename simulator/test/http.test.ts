@@ -8,7 +8,7 @@ import { createSender } from '../src/http.ts';
 const server = http.createServer((req, res) => {
   req.resume();
   req.on('end', () => {
-    if (req.url === '/ok') return res.end(JSON.stringify({ accepted: 2, duplicates: 1 }));
+    if (req.url === '/ok') return res.end(JSON.stringify({ queued: 2 }));
     if (req.url === '/bad') return res.writeHead(400).end('{"reason":"nope"}');
     if (req.url === '/boom') return res.writeHead(500).end();
     if (req.url === '/missing') return res.writeHead(404).end();
@@ -23,7 +23,7 @@ const batch = [{ deviceId: 'dev-00001', intervalStart: '2026-09-30T11:00:00Z', i
 
 test('classifies 200, 400 and 5xx responses', async () => {
   assert.deepEqual({ ...(await createSender(`${base}/ok`, 1000, 2)(batch)), latencyMs: 0 },
-    { kind: 'ok', accepted: 2, duplicates: 1, latencyMs: 0 });
+    { kind: 'ok', queued: 2, latencyMs: 0 });
   const bad = await createSender(`${base}/bad`, 1000, 2)(batch);
   assert.equal(bad.kind, 'rejected');
   const boom = await createSender(`${base}/boom`, 1000, 2)(batch);

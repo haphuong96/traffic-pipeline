@@ -445,3 +445,8 @@ All Phase 1 numbers below are at 20,000 devices (`DEVICE_OFFSET=10000 DEVICE_COU
 | Outage, 2 min | Time from restore to normal | 2 min 37 s (1 min 34 s of it before the API reconnected) | |
 | Outage, 2 min | Readings lost (minutes under 50,000 rows) | 0 | |
 | Baseline, jitter on | Highest stable load | between 20,000 and 40,000 devices; collapses at 40,000 | |
+| Outage, 2 min | Max consumer lag / time to drain after restore | n/a (no queue; the devices were the buffer) | |
+| All | Consumer end-to-end delay p50 / max (API accepted → stored) | n/a | |
+| All | Avg rows per Postgres commit | 1 request (≈ 1 reading) | |
+
+In Phase 2 the API answers 200 once a reading is in Kafka, so database problems no longer show up as client errors. Read them in the consumer's metrics line (`lag`, `storeRetries`, `endToEndMs*`) or in kafka-ui → Consumers → `raw-writer`. The simulator log only shows the API → Kafka path now: no more `accepted` or `dupes`, just `queued`.

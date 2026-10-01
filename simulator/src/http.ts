@@ -9,7 +9,7 @@ export interface ReadingPayload {
 }
 
 export type SendResult =
-  | { kind: 'ok'; accepted: number; duplicates: number; latencyMs: number }
+  | { kind: 'ok'; queued: number; latencyMs: number } // queued in Kafka; the consumer stores it later
   | { kind: 'rejected'; reason: string; latencyMs: number } // 400: never retry
   | { kind: 'retry'; reason: '5xx' | 'timeout' | 'network'; latencyMs: number }; // '5xx' = any non-200/400 response
 
@@ -35,8 +35,8 @@ export function createSender(apiUrl: string, timeoutMs: number, maxConnections: 
       const text = await res.body.text(); // always read the body so the socket can be reused
       const latencyMs = elapsed();
       if (res.statusCode === 200) {
-        const body = JSON.parse(text) as { accepted: number; duplicates: number };
-        return { kind: 'ok', accepted: body.accepted, duplicates: body.duplicates, latencyMs };
+        const body = JSON.parse(text) as { queued: number };
+        return { kind: 'ok', queued: body.queued, latencyMs };
       }
       // Only 400 means "this data is invalid, never resend it". Anything else
       // (404 from a wrong API_URL, 429, 5xx, ...) is a problem on the server
